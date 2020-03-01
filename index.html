@@ -1,0 +1,107 @@
+<!doctype html>
+<html >
+  <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/css/ol.css" type="text/css">
+    <style>
+      .map {
+		margin: 2% 10% 0% 10%;
+        height: 800px;
+        width: 80%;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/build/ol.js"></script>
+    <title>OpenLayers example</title>
+  </head>
+  <body>
+   <div id="map" class="map"></div>
+   <select id="layer-select">
+       <option value="Aerial">Aerial</option>
+       <option value="AerialWithLabelsOnDemand" selected>Aerial with labels</option>
+       <option value="RoadOnDemand">Road</option>
+       <option value="CanvasDark">Road dark</option>
+       <option value="OrdinanceSurvey">Ordinance Survey</option>
+     </select>
+    <script type="text/javascript">
+
+    var geojson_styles = {
+
+    };
+
+    var styleFunction = function(feature) {
+        console.log(feature.getGeometry().getType());
+        return geojson_styles[feature.getGeometry().getType()];
+    };
+	
+	var styles = [
+	'RoadOnDemand',
+	'Aerial',
+	'AerialWithLabelsOnDemand',
+	'CanvasDark',
+	'OrdinanceSurvey'
+	];
+	var layers = [];
+	var i, ii;
+	for (i = 0, ii = styles.length; i < ii; ++i) {
+		layers.push(new ol.layer.Tile({
+		visible: false,
+		preload: Infinity,
+		source: new ol.source.BingMaps({
+			key: 'PUT_BING_MAPS_DEV_KEY',
+			imagerySet: styles[i],
+			// use maxZoom 19 to see stretched tiles instead of the BingMaps
+			// "no photos at this zoom level" tiles
+			maxZoom: 19
+			})
+		}));
+	}
+
+    function getColor(f) {
+
+    };
+
+    var vectorLayer = new ol.layer.Vector({
+		source: new ol.source.Vector({
+			format: new ol.format.GeoJSON(),
+            url: 'GIST_URL_FOR_GEOJSON_FILE'
+		}),
+        style: function(feature) {
+            console.log(feature.getGeometry().getType());
+            console.log(feature.get('index') * 15)
+            return new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: 'yellow',
+                    width: 1
+                }),
+                fill: new ol.style.Fill({
+                    color: 'hsla(' + (200 - (feature.get('index') * 20)) + ',100%,47%,1)'
+                }),
+            });
+        }
+	});
+
+	layers.push(vectorLayer);
+
+
+	var map = new ol.Map({
+        target: 'map',
+        layers: layers,
+        view: new ol.View({
+          center: ol.proj.fromLonLat([-78, 43.5]),
+          zoom: 8
+        })
+      });
+	  
+	var select = document.getElementById('layer-select');
+	function onChange() {
+		var style = select.value;
+		for (var i = 0, ii = layers.length; i < ii; ++i) {
+			layers[i].setVisible(styles[i] === style);
+		}
+		layers[5].setVisible(true);
+	}
+	
+	select.addEventListener('change', onChange);
+	onChange();
+    </script>
+  </body>
+</html>
